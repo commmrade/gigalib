@@ -193,8 +193,9 @@ impl ChatClient {
                 )
                 .await
                 .expect("Fatal error: Could not get auth token");
-
-            return Ok(tok);
+            
+            self.auth_token = tok.into();
+            return Ok(self.auth_token.clone().unwrap());
         }
 
         Ok(self.auth_token.clone().unwrap())
