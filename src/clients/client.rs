@@ -3,6 +3,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use anyhow::anyhow;
 use reqwest::header::HeaderValue;
 
 use crate::http::{
@@ -72,7 +73,7 @@ impl ChatClient {
             )
             .await?;
 
-        Ok(resp.choices.last().unwrap().message.clone())
+        Ok(resp.choices.last().ok_or_else(|| anyhow!("There is no Choice from the AI"))?.message.clone())
     }
 
     pub(crate) async fn send_messages(
@@ -115,8 +116,8 @@ impl ChatClient {
                 headers,
             )
             .await?;
-
-        Ok(resp.choices.last().unwrap().message.clone())
+        
+        Ok(resp.choices.last().ok_or_else(|| anyhow!("There is no choice from the AI"))?.message.clone())
     }
     pub async fn get_models(&mut self) -> anyhow::Result<Vec<Model>> {
         let mut headers = reqwest::header::HeaderMap::new();
@@ -195,7 +196,6 @@ impl ChatClient {
                 .expect("Fatal error: Could not get auth token");
             
             self.auth_token = tok.into();
-            return Ok(self.auth_token.clone().unwrap());
         }
 
         Ok(self.auth_token.clone().unwrap())
