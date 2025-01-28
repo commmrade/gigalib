@@ -8,12 +8,12 @@ use reqwest::header::HeaderValue;
 
 use crate::http::{
     self,
-    message::Message,
+    message::{Message, MessageConfig},
     request::ChatRequest,
     response::{ChatResponse, Model},
 };
 
-use super::{config::MessageConfig, httpclient::HttpClient, structs::AccessToken};
+use super::{httpclient::HttpClient, structs::AccessToken};
 
 const BASE_URL_AUTH: &str = "https://ngw.devices.sberbank.ru:9443/api";
 const BASE_URL: &str = "https://gigachat.devices.sberbank.ru/api";
@@ -63,7 +63,7 @@ impl ChatClient {
             max_tokens: self.message_cfg.max_tokens,
             repetition_penalty: self.message_cfg.repetition_penalty,
         };
-        println!("Serialized request \n{}", serde_json::to_string_pretty(&json_msg).unwrap());
+        
         let resp: ChatResponse = self
             .httpclient
             .post_data(
