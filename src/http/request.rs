@@ -6,7 +6,15 @@ use super::message::Message;
 pub struct ChatRequest {
     pub model: String,
     pub messages: Vec<Message>,
-    pub stream: bool,
-    pub max_tokens: u32,
-    pub repetition_penalty: f32,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_p: Option<f32>, // 0..1
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stream: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repetition_penalty: Option<f32>,
 }

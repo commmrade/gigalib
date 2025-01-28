@@ -34,11 +34,10 @@ impl HttpClient {
             .send()
             .await
             .map_err(|why| anyhow!(format!("could not send request {}", why)))?;
-
         if !resp.status().is_success() {
-            return Err(anyhow!("Request is not successful"));
+            return Err(anyhow!(format!("Request is not successful: {}", resp.status().to_string())));
         }
-
+        
         let resp_str: String = resp.text().await?;
         let r: R = serde_json::from_str(&resp_str)
             .map_err(|why| anyhow!(format!("Could not deserialize: {}", why)))?;
@@ -65,7 +64,7 @@ impl HttpClient {
             .map_err(|why| anyhow!(format!("Sending failure: {}", why)))?;
 
         if !resp.status().is_success() {
-            return Err(anyhow!("Request is not successful"));
+            return Err(anyhow!(format!("Request is not successful: {}", resp.status().to_string())));
         }
 
         let resp_str = resp.text().await?;
@@ -88,7 +87,7 @@ impl HttpClient {
             .map_err(|why| anyhow!(format!("Sending failure: {}", why)))?;
 
         if !resp.status().is_success() {
-            return Err(anyhow!("Request is not successful"));
+            return Err(anyhow!(format!("Request is not successful: {}", resp.status().to_string())));
         }
 
         let resp_str: String = resp.text().await?;

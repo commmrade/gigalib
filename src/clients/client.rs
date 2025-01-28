@@ -13,7 +13,7 @@ use crate::http::{
     response::{ChatResponse, Model},
 };
 
-use super::{httpclient::HttpClient, structs::AccessToken};
+use super::{config::MessageConfig, httpclient::HttpClient, structs::AccessToken};
 
 const BASE_URL_AUTH: &str = "https://ngw.devices.sberbank.ru:9443/api";
 const BASE_URL: &str = "https://gigachat.devices.sberbank.ru/api";
@@ -24,10 +24,8 @@ pub struct ChatClient {
     auth_token: Option<AccessToken>,
 
     // Settings for messages
-    max_tokens: u32,
-    model: String,
+    message_cfg: MessageConfig,
     uuid: String,
-    repet_penalty: f32,
 
     // Other
     httpclient: HttpClient,
@@ -57,13 +55,15 @@ impl ChatClient {
         );
 
         let json_msg = ChatRequest {
-            model: self.model.clone(),
+            model: self.message_cfg.model.clone(),
             messages: vec![message],
-            stream: false,
-            max_tokens: self.max_tokens,
-            repetition_penalty: self.repet_penalty,
+            temperature: self.message_cfg.temperature,
+            top_p: self.message_cfg.top_p,
+            stream: self.message_cfg.stream,
+            max_tokens: self.message_cfg.max_tokens,
+            repetition_penalty: self.message_cfg.repetition_penalty,
         };
-
+        println!("Serialized request \n{}", serde_json::to_string_pretty(&json_msg).unwrap());
         let resp: ChatResponse = self
             .httpclient
             .post_data(
@@ -72,7 +72,7 @@ impl ChatClient {
                 headers,
             )
             .await?;
-
+        
         Ok(resp.choices.last().ok_or_else(|| anyhow!("There is no Choice from the AI"))?.message.clone())
     }
 
@@ -102,12 +102,15 @@ impl ChatClient {
         );
 
         let json_msg = ChatRequest {
-            model: self.model.clone(),
+            model: self.message_cfg.model.clone(),
             messages: messages,
-            stream: false,
-            max_tokens: self.max_tokens,
-            repetition_penalty: self.repet_penalty,
+            temperature: self.message_cfg.temperature,
+            top_p: self.message_cfg.top_p,
+            stream: self.message_cfg.stream,
+            max_tokens: self.message_cfg.max_tokens,
+            repetition_penalty: self.message_cfg.repetition_penalty,
         };
+
         let resp: ChatResponse = self
             .httpclient
             .post_data(
@@ -151,8 +154,9 @@ impl ChatClient {
         Ok(mdls)
     }
 
-    pub fn set_model(&mut self, model_name: &str) {
-        self.model = model_name.to_owned();
+    // Sets to default if new_cfg is None, otherwise set to the passed config
+    pub fn reset_msg_config(&mut self, new_cfg: Option<MessageConfig>) {
+        self.message_cfg = new_cfg.unwrap_or_default();
     }
 
     async fn get_auth_token(&mut self) -> anyhow::Result<AccessToken> {
@@ -202,60 +206,26 @@ impl ChatClient {
     }
 }
 
-pub struct ChatClientBuilder {
+pub struct ClientBuilder {
+    msg_cfg: Option<MessageConfig>,
     basic_token: Option<String>,
-    max_tokens_per_msg: Option<u32>,
-    model: Option<String>,
-    repet_penalty: Option<f32>,
 }
 
-impl ChatClientBuilder {
+
+impl ClientBuilder {
     pub fn new() -> Self {
-        ChatClientBuilder {
-            basic_token: None,
-            max_tokens_per_msg: None,
-            model: None,
-            repet_penalty: None,
-        }
+        Self { msg_cfg: None, basic_token: None }
     }
-    pub fn with_env() -> Self {
-        let basic_token: String =
-            std::env::var("GIGACHAT_TOKEN").expect("$GIGACHAT_TOKEN must be set");
-        ChatClientBuilder {
-            basic_token: basic_token.into(),
-            max_tokens_per_msg: None,
-            model: None,
-            repet_penalty: None,
-        }
-    }
-
-    pub fn set_token(mut self, token: &str) -> Self {
-        self.basic_token = Some(token.to_string());
+    pub fn set_msg_cfg(mut self, msg_cfg: MessageConfig) -> Self {
+        self.msg_cfg = msg_cfg.into();
         self
     }
-
-    pub fn set_max_tokens(mut self, num: u32) -> ChatClientBuilder {
-        self.max_tokens_per_msg = num.into();
+    pub fn set_basic_token(mut self, basic_token: &str) -> Self {
+        self.basic_token = basic_token.to_owned().into();
         self
     }
-    pub fn set_model(mut self, model: &str) -> ChatClientBuilder {
-        self.model = model.to_owned().into();
-        self
-    }
-    pub fn set_repet_penalty(mut self, penalty: f32) -> ChatClientBuilder {
-        self.repet_penalty = penalty.into();
-        self
-    }
-
-    pub fn build(&self) -> ChatClient {
-        ChatClient {
-            basic_token: self.basic_token.clone().expect("Basic token must be set!"),
-            auth_token: None,
-            max_tokens: self.max_tokens_per_msg.unwrap_or(9999),
-            model: self.model.clone().unwrap_or("GigaChat".to_owned()),
-            httpclient: HttpClient::new(),
-            uuid: uuid::Uuid::new_v4().to_string(),
-            repet_penalty: self.repet_penalty.unwrap_or(1.0),
-        }
+    pub fn build(self) -> ChatClient {
+        ChatClient { basic_token: self.basic_token.expect("Token must be set"), 
+        auth_token: None, message_cfg: self.msg_cfg.unwrap_or_default(), uuid: uuid::Uuid::new_v4().to_string(), httpclient: HttpClient::new() }
     }
 }
