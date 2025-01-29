@@ -63,7 +63,7 @@ impl ChatClient {
             max_tokens: self.message_cfg.max_tokens,
             repetition_penalty: self.message_cfg.repetition_penalty,
         };
-        
+
         let resp: ChatResponse = self
             .httpclient
             .post_data(
@@ -72,8 +72,13 @@ impl ChatClient {
                 headers,
             )
             .await?;
-        
-        Ok(resp.choices.last().ok_or_else(|| anyhow!("There is no Choice from the AI"))?.message.clone())
+
+        Ok(resp
+            .choices
+            .last()
+            .ok_or_else(|| anyhow!("There is no Choice from the AI"))?
+            .message
+            .clone())
     }
 
     pub(crate) async fn send_messages(
@@ -119,8 +124,13 @@ impl ChatClient {
                 headers,
             )
             .await?;
-        
-        Ok(resp.choices.last().ok_or_else(|| anyhow!("There is no choice from the AI"))?.message.clone())
+
+        Ok(resp
+            .choices
+            .last()
+            .ok_or_else(|| anyhow!("There is no choice from the AI"))?
+            .message
+            .clone())
     }
     pub async fn get_models(&mut self) -> anyhow::Result<Vec<Model>> {
         let mut headers = reqwest::header::HeaderMap::new();
@@ -163,7 +173,8 @@ impl ChatClient {
         if SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs() > self.auth_token.as_ref().map_or(0, |tok| tok.expires_at)
+            .as_secs()
+            > self.auth_token.as_ref().map_or(0, |tok| tok.expires_at)
         {
             let mut headers: reqwest::header::HeaderMap = reqwest::header::HeaderMap::new();
             headers.append(
@@ -198,7 +209,7 @@ impl ChatClient {
                 )
                 .await
                 .expect("Fatal error: Could not get auth token");
-            
+
             self.auth_token = tok.into();
         }
 
@@ -211,10 +222,12 @@ pub struct ClientBuilder {
     basic_token: Option<String>,
 }
 
-
 impl ClientBuilder {
     pub fn new() -> Self {
-        Self { msg_cfg: None, basic_token: None }
+        Self {
+            msg_cfg: None,
+            basic_token: None,
+        }
     }
     pub fn set_msg_cfg(mut self, msg_cfg: MessageConfig) -> Self {
         self.msg_cfg = msg_cfg.into();
@@ -225,7 +238,12 @@ impl ClientBuilder {
         self
     }
     pub fn build(self) -> ChatClient {
-        ChatClient { basic_token: self.basic_token.expect("Token must be set"), 
-        auth_token: None, message_cfg: self.msg_cfg.unwrap_or_default(), uuid: uuid::Uuid::new_v4().to_string(), httpclient: HttpClient::new() }
+        ChatClient {
+            basic_token: self.basic_token.expect("Token must be set"),
+            auth_token: None,
+            message_cfg: self.msg_cfg.unwrap_or_default(),
+            uuid: uuid::Uuid::new_v4().to_string(),
+            httpclient: HttpClient::new(),
+        }
     }
 }

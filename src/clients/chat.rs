@@ -28,7 +28,7 @@ impl Chat {
             .client
             .send_messages(self.message_history.clone())
             .await?;
-        
+
         self.message_history.push(resp.clone());
         Ok(resp)
     }

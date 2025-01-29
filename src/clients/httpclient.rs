@@ -33,14 +33,17 @@ impl HttpClient {
             .form(&body)
             .send()
             .await
-            .map_err(|why| anyhow!(format!("could not send request {}", why)))?;
+            .map_err(|why| anyhow!("could not send request {}", why))?;
         if !resp.status().is_success() {
-            return Err(anyhow!(format!("Request is not successful: {}", resp.status().to_string())));
+            return Err(anyhow!(
+                "Request is not successful: {}",
+                resp.status().to_string()
+            ));
         }
-        
+
         let resp_str: String = resp.text().await?;
         let r: R = serde_json::from_str(&resp_str)
-            .map_err(|why| anyhow!(format!("Could not deserialize: {}", why)))?;
+            .map_err(|why| anyhow!("Could not deserialize: {}", why))?;
         Ok(r)
     }
 
@@ -61,15 +64,18 @@ impl HttpClient {
             .body(body)
             .send()
             .await
-            .map_err(|why| anyhow!(format!("Sending failure: {}", why)))?;
+            .map_err(|why| anyhow!("Sending failure: {}", why))?;
 
         if !resp.status().is_success() {
-            return Err(anyhow!(format!("Request is not successful: {}", resp.status().to_string())));
+            return Err(anyhow!(
+                "Request is not successful: {}",
+                resp.status().to_string()
+            ));
         }
 
         let resp_str = resp.text().await?;
         let r: R = serde_json::from_str(&resp_str)
-            .map_err(|why| anyhow!(format!("Could not deserialize {}", why)))?;
+            .map_err(|why| anyhow!("Could not deserialize {}", why))?;
 
         Ok(r)
     }
@@ -84,15 +90,18 @@ impl HttpClient {
             .headers(headers)
             .send()
             .await
-            .map_err(|why| anyhow!(format!("Sending failure: {}", why)))?;
+            .map_err(|why| anyhow!("Sending failure: {}", why))?;
 
         if !resp.status().is_success() {
-            return Err(anyhow!(format!("Request is not successful: {}", resp.status().to_string())));
+            return Err(anyhow!(
+                "Request is not successful: {}",
+                resp.status().to_string()
+            ));
         }
 
         let resp_str: String = resp.text().await?;
         let r: R = serde_json::from_str(&resp_str)
-            .map_err(|why| anyhow!(format!("Could not deserialize {}", why)))?;
+            .map_err(|why| anyhow!("Could not deserialize {}", why))?;
         Ok(r)
     }
 }
