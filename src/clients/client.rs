@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::anyhow;
-use reqwest::header::HeaderValue;
+use reqwest::header::{HeaderMap, HeaderValue};
 
 use crate::http::{
     self,
@@ -82,18 +82,20 @@ impl ChatClient {
     }
 
     pub(crate) async fn send_messages(
+        // Only for Chat struct
         &mut self,
         messages: Vec<Message>,
+        cache_uuid: Option<&str>,
     ) -> anyhow::Result<Message> {
-        let mut headers = reqwest::header::HeaderMap::new();
+        let mut headers = HeaderMap::new();
         headers.append(
             "Content-Type",
-            reqwest::header::HeaderValue::from_str("application/json").unwrap(),
+            HeaderValue::from_str("application/json").unwrap(),
         );
-        headers.append(
-            "Accept",
-            reqwest::header::HeaderValue::from_str("application/json").unwrap(),
-        );
+        headers.append("Accept", HeaderValue::from_str("application/json").unwrap());
+        if let Some(cache_str) = cache_uuid {
+            headers.append("X-Session-ID", HeaderValue::from_str(cache_str).unwrap());
+        }
         headers.append(
             "Authorization",
             reqwest::header::HeaderValue::from_str(
@@ -132,6 +134,7 @@ impl ChatClient {
             .message
             .clone())
     }
+
     pub async fn get_models(&mut self) -> anyhow::Result<Vec<Model>> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.append("Accept", HeaderValue::from_str("application/json").unwrap());
@@ -167,6 +170,9 @@ impl ChatClient {
     // Sets to default if new_cfg is None, otherwise set to the passed config
     pub fn reset_msg_config(&mut self, new_cfg: Option<MessageConfig>) {
         self.message_cfg = new_cfg.unwrap_or_default();
+    }
+    pub fn get_current_config(&self) -> MessageConfig {
+        self.message_cfg.clone()
     }
 
     async fn get_auth_token(&mut self) -> anyhow::Result<AccessToken> {

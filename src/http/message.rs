@@ -84,6 +84,7 @@ impl From<(String, Role)> for Message {
     }
 }
 
+#[derive(Clone)]
 pub struct MessageConfig {
     pub model: String,
     pub temperature: Option<f32>,
