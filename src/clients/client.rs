@@ -1,10 +1,16 @@
 use std::{
     collections::HashMap,
+    ffi::OsStr,
+    path::{Path, PathBuf},
+    str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use anyhow::anyhow;
-use reqwest::header::{HeaderMap, HeaderValue};
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    multipart::{Form, Part},
+};
 
 use crate::http::{
     self,
@@ -13,7 +19,7 @@ use crate::http::{
     response::{ChatResponse, Model},
 };
 
-use super::{httpclient::HttpClient, structs::AccessToken};
+use super::{access_token::AccessToken, file::GigaFile, httpclient::HttpClient};
 
 const BASE_URL_AUTH: &str = "https://ngw.devices.sberbank.ru:9443/api";
 const BASE_URL: &str = "https://gigachat.devices.sberbank.ru/api";
@@ -72,7 +78,7 @@ impl ChatClient {
                 headers,
             )
             .await?;
-
+        println!("{}", serde_json::to_string(&json_msg).unwrap());
         Ok(resp
             .choices
             .last()
@@ -220,6 +226,71 @@ impl ChatClient {
         }
 
         Ok(self.auth_token.clone().unwrap())
+    }
+
+    // Files
+
+    pub async fn upload_file(&mut self, filepath: PathBuf) -> anyhow::Result<GigaFile> {
+        let file = tokio::fs::read(&filepath).await?;
+
+        let mime_type = tree_magic::from_filepath(&filepath);
+        let filename = filepath.file_name().unwrap().to_str().unwrap().to_owned();
+
+        let form = Form::new()
+            .part(
+                "file",
+                Part::bytes(file)
+                    .file_name(filename)
+                    .mime_str(&mime_type)
+                    .unwrap(),
+            )
+            .text("purpose", "general");
+
+        let mut headers = HeaderMap::new();
+        headers.append(
+            "Authorization",
+            HeaderValue::from_str(&format!(
+                "Bearer {}",
+                self.get_auth_token().await.unwrap().access_token
+            ))
+            .unwrap(),
+        );
+
+        let file: GigaFile = self
+            .httpclient
+            .post_multipart(&(BASE_URL.to_owned() + "/v1/files"), form, headers)
+            .await?;
+
+        Ok(file)
+    }
+
+    pub async fn delete_file(&mut self, file_id: &str) -> anyhow::Result<()> {
+        let api_url = format!(
+            "https://gigachat.devices.sberbank.ru/api/v1/files/{}/delete",
+            file_id
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.append("Accept", HeaderValue::from_str("application/json").unwrap());
+        headers.append(
+            "Authorization",
+            HeaderValue::from_str(&format!(
+                "Bearer {}",
+                self.get_auth_token().await.unwrap().access_token
+            ))
+            .unwrap(),
+        );
+
+        let json_obj: serde_json::Value = self
+            .httpclient
+            .post_data(&api_url, String::new(), headers)
+            .await?;
+
+        if !json_obj.get("deleted").unwrap().as_bool().unwrap_or(false) {
+            return Err(anyhow!("File was not deleted"));
+        }
+
+        Ok(())
     }
 }
 

@@ -27,6 +27,8 @@ impl Display for Role {
 pub struct Message {
     pub content: String,
     pub role: Role,
+    #[serde(skip_serializing_if = "Vec::is_empty", skip_deserializing)]
+    attachments: Vec<String>,
 }
 
 impl Message {
@@ -34,19 +36,25 @@ impl Message {
         Self {
             content: content.to_owned(),
             role: role,
+            attachments: vec![],
         }
     }
     pub fn from_str(content: &str) -> Self {
         Self {
             content: content.to_owned(),
             role: Role::User,
+            attachments: vec![],
         }
     }
     pub fn from_tuple(contents: &(&str, Role)) -> Self {
         Self {
             content: contents.0.to_owned(),
             role: Role::User,
+            attachments: vec![],
         }
+    }
+    pub fn add_attachment(&mut self, attachment_id: &str) {
+        self.attachments.push(attachment_id.to_owned());
     }
 }
 
@@ -55,6 +63,7 @@ impl From<String> for Message {
         Self {
             content: value,
             role: Role::User,
+            attachments: vec![],
         }
     }
 }
@@ -64,6 +73,7 @@ impl From<&str> for Message {
         Self {
             content: value.to_owned(),
             role: Role::User,
+            attachments: vec![],
         }
     }
 }
@@ -72,6 +82,7 @@ impl From<(&str, Role)> for Message {
         Self {
             content: value.0.to_owned(),
             role: value.1,
+            attachments: vec![],
         }
     }
 }
@@ -80,6 +91,7 @@ impl From<(String, Role)> for Message {
         Self {
             content: value.0,
             role: value.1,
+            attachments: vec![],
         }
     }
 }

@@ -26,11 +26,11 @@ async fn main() {
         std::io::stdin().read_line(&mut str).unwrap();
 
         let resp = chat.send_message(str.into()).await.unwrap();
-        println!("{}", resp.content);
+
 
         if resp.content == "exit" {
             break
         }
-    }   
+    }
 }
 ```
