@@ -78,7 +78,7 @@ impl ChatClient {
                 headers,
             )
             .await?;
-        println!("{}", serde_json::to_string(&json_msg).unwrap());
+
         Ok(resp
             .choices
             .last()
