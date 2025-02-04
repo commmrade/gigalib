@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct GigaFile {
     pub bytes: u64,
     pub created_at: u64,

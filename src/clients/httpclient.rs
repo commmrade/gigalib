@@ -133,6 +133,7 @@ impl HttpClient {
         }
 
         let resp_str: String = resp.text().await?;
+
         let r: R = serde_json::from_str(&resp_str)
             .map_err(|why| anyhow!("Could not deserialize {}", why))?;
         Ok(r)

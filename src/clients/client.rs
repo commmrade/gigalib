@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::anyhow;
 use reqwest::{
-    header::{HeaderMap, HeaderValue},
+    header::{HeaderMap, HeaderValue, ACCEPT},
     multipart::{Form, Part},
 };
 
@@ -171,6 +171,47 @@ impl ChatClient {
             .collect();
 
         Ok(mdls)
+    }
+
+    pub async fn get_file_info(&mut self, file_id: &str) -> anyhow::Result<GigaFile> {
+        let mut headers = HeaderMap::new();
+        headers.insert(ACCEPT, HeaderValue::from_str("application/json").unwrap());
+        headers.append(
+            "Authorization",
+            HeaderValue::from_str(
+                format!(
+                    "Bearer {}",
+                    self.get_auth_token().await.unwrap().access_token
+                )
+                .as_str(),
+            )
+            .unwrap(),
+        );
+        let api_url = BASE_URL.to_owned() + &format!("/v1/files/{}", file_id);
+        let resp: GigaFile = self.httpclient.get(&api_url, headers).await?;
+
+        Ok(resp)
+    }
+
+    pub async fn get_files(&mut self) -> anyhow::Result<Vec<GigaFile>> {
+        let mut headers = HeaderMap::new();
+        headers.insert(ACCEPT, HeaderValue::from_str("application/json").unwrap());
+        headers.append(
+            "Authorization",
+            HeaderValue::from_str(
+                format!(
+                    "Bearer {}",
+                    self.get_auth_token().await.unwrap().access_token
+                )
+                .as_str(),
+            )
+            .unwrap(),
+        );
+        let api_url = BASE_URL.to_owned() + "/v1/files";
+        let mut files: HashMap<String, Vec<GigaFile>> =
+            self.httpclient.get(&api_url, headers).await?;
+
+        Ok(files.remove_entry("data").unwrap().1)
     }
 
     // Sets to default if new_cfg is None, otherwise set to the passed config
