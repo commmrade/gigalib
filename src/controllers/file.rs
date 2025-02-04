@@ -1,5 +1,6 @@
 use serde::Deserialize;
 
+/// Struct used for storing information about a file
 #[derive(Deserialize, Debug)]
 pub struct GigaFile {
     pub bytes: u64,

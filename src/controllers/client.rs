@@ -21,6 +21,7 @@ use super::{access_token::AccessToken, file::GigaFile, httpclient::HttpClient};
 const BASE_URL_AUTH: &str = "https://ngw.devices.sberbank.ru:9443/api";
 const BASE_URL: &str = "https://gigachat.devices.sberbank.ru/api";
 
+/// The main thing, which interacts with the GigaChat API
 pub struct GigaClient {
     // Tokens
     basic_token: String,
@@ -84,8 +85,8 @@ impl GigaClient {
             .clone())
     }
 
+    /// Non-pub function used for sending multiple messages, primarily used by 'Chat'
     pub(crate) async fn send_messages(
-        // Only for Chat struct
         &mut self,
         messages: Vec<Message>,
         cache_uuid: Option<&str>,
@@ -138,6 +139,7 @@ impl GigaClient {
             .clone())
     }
 
+    /// Returns available GigaChat AI models
     pub async fn get_models(&mut self) -> anyhow::Result<Vec<Model>> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.append("Accept", HeaderValue::from_str("application/json").unwrap());
@@ -170,6 +172,7 @@ impl GigaClient {
         Ok(mdls)
     }
 
+    /// Returns file information, which includes timestamps, filename, id and etc...
     pub async fn get_file_info(&mut self, file_id: &str) -> anyhow::Result<GigaFile> {
         let mut headers = HeaderMap::new();
         headers.insert(ACCEPT, HeaderValue::from_str("application/json").unwrap());
@@ -190,6 +193,7 @@ impl GigaClient {
         Ok(resp)
     }
 
+    /// Gets a list of available files, that user have uploaded before
     pub async fn get_files(&mut self) -> anyhow::Result<Vec<GigaFile>> {
         let mut headers = HeaderMap::new();
         headers.insert(ACCEPT, HeaderValue::from_str("application/json").unwrap());
@@ -211,7 +215,7 @@ impl GigaClient {
         Ok(files.remove_entry("data").unwrap().1)
     }
 
-    // Sets to default if new_cfg is None, otherwise set to the passed config
+    /// Sets to default if new_cfg is None, otherwise set to the passed config
     pub fn reset_msg_config(&mut self, new_cfg: Option<MessageConfig>) {
         self.message_cfg = new_cfg.unwrap_or_default();
     }
@@ -219,6 +223,7 @@ impl GigaClient {
         self.message_cfg.clone()
     }
 
+    /// Gets an OAuth config, needed for requests to the API
     async fn get_auth_token(&mut self) -> anyhow::Result<AccessToken> {
         if SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -267,7 +272,7 @@ impl GigaClient {
     }
 
     // Files
-
+    /// Uploads a file to the GigaChat storage
     pub async fn upload_file(&mut self, filepath: PathBuf) -> anyhow::Result<GigaFile> {
         let file = tokio::fs::read(&filepath).await?;
 
@@ -302,6 +307,7 @@ impl GigaClient {
         Ok(file)
     }
 
+    /// Deletes a file from the storage
     pub async fn delete_file(&mut self, file_id: &str) -> anyhow::Result<()> {
         let api_url = format!(
             "https://gigachat.devices.sberbank.ru/api/v1/files/{}/delete",

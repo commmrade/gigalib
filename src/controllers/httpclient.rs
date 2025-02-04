@@ -2,12 +2,13 @@ use anyhow::anyhow;
 use reqwest::multipart::Form;
 use serde::{Deserialize, Serialize};
 
+/// Wrapper for a HTTP client, which sends request to the GigaChat API
 pub struct HttpClient {
     httpclient: reqwest::Client,
 }
 
 impl HttpClient {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             httpclient: reqwest::ClientBuilder::new()
                 .danger_accept_invalid_certs(true)
@@ -16,7 +17,7 @@ impl HttpClient {
         }
     }
 
-    pub async fn post_form<T, R>(
+    pub(crate) async fn post_form<T, R>(
         &self,
         api: &str,
         body: T,
@@ -47,7 +48,7 @@ impl HttpClient {
         Ok(r)
     }
 
-    pub async fn post_multipart<R>(
+    pub(crate) async fn post_multipart<R>(
         &self,
         api: &str,
         body: Form,
@@ -77,7 +78,7 @@ impl HttpClient {
         Ok(r)
     }
 
-    pub async fn post_data<S, R>(
+    pub(crate) async fn post_data<S, R>(
         &self,
         api: &str,
         body: S,
@@ -111,7 +112,11 @@ impl HttpClient {
         Ok(r)
     }
 
-    pub async fn get<R>(&self, api: &str, headers: reqwest::header::HeaderMap) -> anyhow::Result<R>
+    pub(crate) async fn get<R>(
+        &self,
+        api: &str,
+        headers: reqwest::header::HeaderMap,
+    ) -> anyhow::Result<R>
     where
         R: for<'a> Deserialize<'a>,
     {

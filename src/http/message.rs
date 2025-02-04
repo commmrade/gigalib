@@ -2,6 +2,7 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
+/// Roles that are used by GigaChat API
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Role {
     #[serde(rename = "user")]
@@ -23,6 +24,7 @@ impl Display for Role {
     }
 }
 
+/// Struct that is returned by GigaChat API as a Message
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Message {
     pub content: String,
