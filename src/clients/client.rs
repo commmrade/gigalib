@@ -24,7 +24,7 @@ use super::{access_token::AccessToken, file::GigaFile, httpclient::HttpClient};
 const BASE_URL_AUTH: &str = "https://ngw.devices.sberbank.ru:9443/api";
 const BASE_URL: &str = "https://gigachat.devices.sberbank.ru/api";
 
-pub struct ChatClient {
+pub struct GigaClient {
     // Tokens
     basic_token: String,
     auth_token: Option<AccessToken>,
@@ -37,7 +37,7 @@ pub struct ChatClient {
     httpclient: HttpClient,
 }
 
-impl ChatClient {
+impl GigaClient {
     pub async fn send_message(&mut self, message: Message) -> anyhow::Result<Message> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.append(
@@ -355,8 +355,8 @@ impl ClientBuilder {
         self.basic_token = basic_token.to_owned().into();
         self
     }
-    pub fn build(self) -> ChatClient {
-        ChatClient {
+    pub fn build(self) -> GigaClient {
+        GigaClient {
             basic_token: self.basic_token.expect("Token must be set"),
             auth_token: None,
             message_cfg: self.msg_cfg.unwrap_or_default(),
