@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use uuid::Uuid;
 
 use crate::http::message::Message;
@@ -14,7 +13,7 @@ pub struct Chat {
 impl Chat {
     pub fn new(client: GigaClient) -> Self {
         Self {
-            client: client,
+            client,
             message_history: Vec::new(),
             cache_uuid: String::new(),
         }
@@ -23,7 +22,7 @@ impl Chat {
         let cache = Uuid::new_v4().to_string();
 
         Self {
-            client: client,
+            client,
             message_history: Vec::new(),
             cache_uuid: cache,
         }

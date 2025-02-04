@@ -1,8 +1,6 @@
 use std::{
     collections::HashMap,
-    ffi::OsStr,
-    path::{Path, PathBuf},
-    str::FromStr,
+    path::PathBuf,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -13,7 +11,6 @@ use reqwest::{
 };
 
 use crate::http::{
-    self,
     message::{Message, MessageConfig},
     request::ChatRequest,
     response::{ChatResponse, Model},
@@ -116,7 +113,7 @@ impl GigaClient {
 
         let json_msg = ChatRequest {
             model: self.message_cfg.model.clone(),
-            messages: messages,
+            messages,
             temperature: self.message_cfg.temperature,
             top_p: self.message_cfg.top_p,
             stream: self.message_cfg.stream,

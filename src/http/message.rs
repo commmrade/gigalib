@@ -35,7 +35,7 @@ impl Message {
     pub fn new(content: &str, role: Role) -> Self {
         Self {
             content: content.to_owned(),
-            role: role,
+            role,
             attachments: vec![],
         }
     }
