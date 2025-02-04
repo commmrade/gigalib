@@ -1,7 +1,13 @@
 [package]
 name = "gigalib"
+description = "An async GigaChat API wrapper library"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/commmrade/gigalib"
+repository = "https://github.com/commmrade/gigalib"
+readme = "README.md"
+keywords = ["async", "gigachat", "api", "http"]
 
 [dependencies]
 anyhow = "1.0.95"
