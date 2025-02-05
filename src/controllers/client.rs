@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     path::PathBuf,
+    sync::{Arc, Mutex},
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -25,7 +26,7 @@ const BASE_URL: &str = "https://gigachat.devices.sberbank.ru/api";
 pub struct GigaClient {
     // Tokens
     basic_token: String,
-    auth_token: Option<AccessToken>,
+    auth_token: Arc<Mutex<Option<AccessToken>>>,
 
     // Settings for messages
     message_cfg: MessageConfig,
@@ -225,11 +226,12 @@ impl GigaClient {
 
     /// Gets an OAuth config, needed for requests to the API
     async fn get_auth_token(&mut self) -> anyhow::Result<AccessToken> {
+        let mut auth_token = self.auth_token.lock().unwrap();
         if SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs()
-            > self.auth_token.as_ref().map_or(0, |tok| tok.expires_at)
+            > auth_token.as_ref().map_or(0, |tok| tok.expires_at)
         {
             let mut headers: reqwest::header::HeaderMap = reqwest::header::HeaderMap::new();
             headers.append(
@@ -265,10 +267,10 @@ impl GigaClient {
                 .await
                 .expect("Fatal error: Could not get auth token");
 
-            self.auth_token = tok.into();
+            *auth_token = Some(tok);
         }
 
-        Ok(self.auth_token.clone().unwrap())
+        Ok(auth_token.clone().unwrap())
     }
 
     // Files
@@ -361,7 +363,7 @@ impl ClientBuilder {
     pub fn build(self) -> GigaClient {
         GigaClient {
             basic_token: self.basic_token.expect("Token must be set"),
-            auth_token: None,
+            auth_token: Arc::new(Mutex::new(None)),
             message_cfg: self.msg_cfg.unwrap_or_default(),
             uuid: uuid::Uuid::new_v4().to_string(),
             httpclient: HttpClient::new(),
