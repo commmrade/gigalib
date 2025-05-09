@@ -3,8 +3,20 @@ use reqwest::multipart::Form;
 use serde::{Deserialize, Serialize};
 
 /// Wrapper for a HTTP client, which sends request to the GigaChat API
+
 pub struct HttpClient {
     httpclient: reqwest::Client,
+}
+
+impl Clone for HttpClient {
+    fn clone(&self) -> Self {
+        Self {
+            httpclient: reqwest::ClientBuilder::new()
+                .danger_accept_invalid_certs(true)
+                .build()
+                .expect("reqwest Client could not be created"),
+        }
+    }
 }
 
 impl HttpClient {

@@ -23,6 +23,7 @@ const BASE_URL_AUTH: &str = "https://ngw.devices.sberbank.ru:9443/api";
 const BASE_URL: &str = "https://gigachat.devices.sberbank.ru/api";
 
 /// The main thing, which interacts with the GigaChat API
+#[derive(Clone)]
 pub struct GigaClient {
     // Tokens
     basic_token: String,
