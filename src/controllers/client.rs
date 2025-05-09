@@ -27,7 +27,7 @@ const BASE_URL: &str = "https://gigachat.devices.sberbank.ru/api";
 pub struct GigaClient {
     // Tokens
     basic_token: String,
-    auth_token: Arc<Mutex<Option<AccessToken>>>,
+    auth_token: Arc<Option<AccessToken>>,
 
     // Settings for messages
     message_cfg: MessageConfig,
@@ -36,6 +36,18 @@ pub struct GigaClient {
     // Other
     httpclient: HttpClient,
 }
+
+// impl Clone for GigaClient {
+//     fn clone(&self) -> Self {
+//         Self {
+//             basic_token: self.basic_token.clone(),
+//             auth_token: Arc::new(Mutex::new),
+//             message_cfg: (),
+//             uuid: (),
+//             httpclient: (),
+//         }
+//     }
+// }
 
 impl GigaClient {
     pub async fn send_message(&mut self, message: Message) -> anyhow::Result<Message> {
